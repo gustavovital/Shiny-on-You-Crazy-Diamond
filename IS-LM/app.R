@@ -6,7 +6,11 @@
 
 # Pacotes necessários ----
 
+library(tidyverse)
 library(shiny)
+library(plotly)
+
+
 
 ui <- fluidPage(
   
@@ -26,16 +30,16 @@ ui <- fluidPage(
                tags$table(
                  tags$tr(width = "100%",
                          tags$td(width = "80%", div(style = "font-size:13px;", "Marginal Propensity to Consume")),
-                         tags$td(width = "20%", numericInput("num", NULL, value = 0.63))),
+                         tags$td(width = "20%", numericInput("c", NULL, value = 0.63))),
                  tags$tr(width = "100%",
                          tags$td(width = "80%", div(style = "font-size:13px;", "Sensibility of the Investment to the Interest Rate")),
-                         tags$td(width = "20%", numericInput("num", NULL, value = 1500))),
+                         tags$td(width = "20%", numericInput("b", NULL, value = 1500))),
                  tags$tr(width = "100%",
                          tags$td(width = "80%", div(style = "font-size:13px;", "Sensibility of the Money Demand to the Product")),
-                         tags$td(width = "20%", numericInput("num", NULL, value = 0.6))),
+                         tags$td(width = "20%", numericInput("k", NULL, value = 0.6))),
                  tags$tr(width = "100%",
                          tags$td(width = "80%", div(style = "font-size:13px;", "Sensibility of the Money Demand to the Interest Rate")),
-                         tags$td(width = "20%", numericInput("num", NULL, value = 1))),
+                         tags$td(width = "20%", numericInput("h", NULL, value = 2700))),
                  br(),
                )
         )
@@ -50,30 +54,30 @@ ui <- fluidPage(
                tags$table(
                  tags$tr(width = "100%",
                          tags$td(width = "80%", div(style = "font-size:13px;", "Autonomous Consumption")),
-                         tags$td(width = "20%", numericInput("num", NULL, value = 55))),
+                         tags$td(width = "20%", numericInput("C_bar", NULL, value = 55))),
                  tags$tr(width = "100%",
                          tags$td(width = "80%", div(style = "font-size:13px;", "Autonomous Investment")),
-                         tags$td(width = "20%", numericInput("num", NULL, value = 75))),
+                         tags$td(width = "20%", numericInput("I_bar", NULL, value = 75))),
                  tags$tr(width = "100%",
                          tags$td(width = "80%", div(style = "font-size:13px;", "Government Spending")),
-                         tags$td(width = "20%", numericInput("num", NULL, value = 200))),
+                         tags$td(width = "20%", numericInput("G_bar", NULL, value = 200))),
                  tags$tr(width = "100%",
                          tags$td(width = "80%", div(style = "font-size:13px;", "Tax on Income")),
-                         tags$td(width = "20%", numericInput("num", NULL, value = 110))),
+                         tags$td(width = "20%", numericInput("T_bar", NULL, value = 110))),
                  tags$tr(width = "100%",
                          tags$td(width = "80%", div(style = "font-size:13px;", "Money Supply")),
-                         tags$td(width = "20%", numericInput("num", NULL, value = 200))),
+                         tags$td(width = "20%", numericInput("M_bar", NULL, value = 200))),
                  tags$tr(width = "100%",
-                         tags$td(width = "80%", div(style = "font-size:13px;", "Price Level (fixed sdsdfin the short-run)")),
-                         tags$td(width = "20%", numericInput("num", NULL, value = 1))),
+                         tags$td(width = "80%", div(style = "font-size:13px;", "Price Level (fixed the short-run)")),
+                         tags$td(width = "20%", numericInput("P_bar", NULL, value = 1))),
                  br()
                )
         )
       )
     ),
     
-    mainPanel('huahahaha',
-      plotOutput("islmPlot")
+    mainPanel(h1('IS-LM Simulation'),
+      plotlyOutput("islmPlot")
     )
   )
   
@@ -84,22 +88,31 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   
-  # Histogram of the Old Faithful Geyser Data ----
-  # with requested number of bins
-  # This expression that generates a histogram is wrapped in a call
-  # to renderPlot to indicate that:
-  #
-  # 1. It is "reactive" and therefore should be automatically
-  #    re-executed when inputs (input$bins) change
-  # 2. Its output type is a plot
-  output$distPlot <- renderPlot({
+  output$islmPlot <- renderPlotly({
     
-    x    <- faithful$waiting
-    bins <- seq(min(x), max(x), length.out = input$bins + 1)
+    # Matrix representation ----
+    A <- rbind(c(1, -1, -1, 0),
+               c(-input$c, 1, 0, 0),
+               c(0, 0, 1, input$b),
+               c(k, 0, 0, -input$h))
+    d <- c(input$G_bar, input$C_bar-input$c*input$T_bar, input$I_bar, 
+           input$M_bar/input$P_bar)
     
-    hist(x, breaks = bins, col = "#75AADB", border = "white",
-         xlab = "Waiting time to next eruption (in mins)",
-         main = "Histogram of waiting times")
+    # Solutions ----
+    x <- solve(A, d)
+    
+    Y <- seq(0.95*x[1], 1.05*x[1], 1)
+    C <- input$C_bar + input$c*(Y - input$T_bar)
+    I <- Y - C - input$G_bar
+    IS <- (input$I_bar-I)/input$b
+    LM <- 1/input$h*(input$k*Y-input$M_bar/input$P_bar)
+    
+    data <- tibble(Y, C, I, IS, LM)
+    
+    ggplot(data, aes(x = Y)) + 
+      geom_line(aes(y = IS), size = 2, alpha = .7, colour = 'dodgerblue3') +
+      geom_line(aes(y = LM), size = 2, alpha = .7, colour = 'tomato3') +
+      theme_minimal()
     
   })
   

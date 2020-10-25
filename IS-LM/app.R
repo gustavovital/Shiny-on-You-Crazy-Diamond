@@ -10,7 +10,7 @@ library(tidyverse)
 library(shiny)
 library(plotly)
 
-
+# começando
 
 ui <- fluidPage(
   
@@ -94,7 +94,7 @@ server <- function(input, output) {
     A <- rbind(c(1, -1, -1, 0),
                c(-input$c, 1, 0, 0),
                c(0, 0, 1, input$b),
-               c(k, 0, 0, -input$h))
+               c(input$k, 0, 0, -input$h))
     d <- c(input$G_bar, input$C_bar-input$c*input$T_bar, input$I_bar, 
            input$M_bar/input$P_bar)
     

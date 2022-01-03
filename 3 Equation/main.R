@@ -40,13 +40,13 @@ data %>%
   ggplot() +
   geom_line(aes(x = (pit_1 + alpha*(yt - ye)), y = pit), size = 2, alpha = .4, color = 'blue') +  # PC
   geom_line(aes(x = yt, y = (ye - -alpha*beta*(pit - piT))), size = 2, alpha = .4) +  # MR
-  xlim(0, 10) +
+  xlim(0, 8) +
   ylim(-2, 5) -> y_pi
 
 data %>% 
   ggplot(aes(yt, rt)) +
-  geom_line(, size = 2, alpha = .4, color = 'darkblue') +
-  xlim(0, 10) -> y_rt
+  geom_line(size = 2, alpha = .4, color = 'darkblue') +
+  xlim(0, 8) -> y_rt
 
 
 y_rt/y_pi
